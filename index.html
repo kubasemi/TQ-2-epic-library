@@ -1,0 +1,3932 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titan Quest 2 Epic Items - Offline Database</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+            --rarity-epic: #a335ee;
+            --rarity-rare: #0070dd;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent-gold: #f59e0b;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border);
+            padding: 40px 20px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin: 0 0 20px 0;
+        }
+
+        h1 span {
+            font-style: italic;
+            color: var(--rarity-epic);
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .search-box {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 12px 20px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .search-box input:focus {
+            border-color: var(--rarity-epic);
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .filter-btn.active {
+            background: var(--rarity-epic);
+            color: white;
+            border-color: var(--rarity-epic);
+        }
+
+        .results-info {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-top: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .item-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+        }
+
+        .item-card.hidden {
+            display: none;
+        }
+
+        .rarity-bar {
+            height: 4px;
+            background-color: var(--rarity-epic);
+        }
+
+        .item-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .item-header {
+            margin-bottom: 16px;
+        }
+
+        .rarity-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--rarity-epic);
+        }
+
+        .item-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            margin: 4px 0 0 0;
+        }
+
+        .stats-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .stat-key {
+            font-size: 10px;
+            text-transform: capitalize;
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #d4d4d8;
+        }
+
+        .details-section {
+            border-top: 1px solid var(--border);
+            padding-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            flex: 1;
+        }
+
+        .detail-group h4 {
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin: 0 0 8px 0;
+        }
+
+        .detail-group ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .detail-group li {
+            font-size: 12px;
+            color: var(--rarity-rare);
+            margin-bottom: 4px;
+        }
+
+        .unique-title {
+            color: var(--accent-gold) !important;
+        }
+
+        .unique-effect {
+            color: var(--accent-gold) !important;
+            font-style: italic;
+        }
+
+        .meta-section {
+            margin-top: auto;
+        }
+
+        .requirement {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 10px;
+            margin-bottom: 16px;
+        }
+
+        .requirement strong {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .flavor-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 12px;
+            font-style: italic;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .footer-stats {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .footer-stat span {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .footer-stat strong {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .grid { grid-template-columns: 1fr; }
+            .controls { gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container" style="padding: 0;">
+            <h1>Titan Quest 2 <span>Epic Items</span></h1>
+            <div class="controls">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search items, stats, properties...">
+                </div>
+                <div class="filters" id="typeFilters">
+                    <button class="filter-btn active" data-type="all">All Types</button>
+                    <button class="filter-btn" data-type="1h axe">1h Axe</button><button class="filter-btn" data-type="1h club">1h Club</button><button class="filter-btn" data-type="2h axe">2h Axe</button><button class="filter-btn" data-type="2h club">2h Club</button><button class="filter-btn" data-type="bow">Bow</button><button class="filter-btn" data-type="dagger">Dagger</button><button class="filter-btn" data-type="necklace">Necklace</button><button class="filter-btn" data-type="ring">Ring</button><button class="filter-btn" data-type="shield">Shield</button><button class="filter-btn" data-type="spear">Spear</button><button class="filter-btn" data-type="staff">Staff</button><button class="filter-btn" data-type="sword">Sword</button>
+                </div>
+                <div class="results-info" id="resultsInfo">
+                    Showing all items
+                </div>
+            </div>
+        </div>
+    </header>
+    <div class="container">
+        <div class="grid" id="itemGrid">
+            
+      <div class="item-card" data-name="edge of darkness" data-type="sword" data-search-content="edge of darkness sword total_damage 120-132 vitality_damage 84-93 cold_damage 36-40 attack_speed 1.4x 31% increased cold damage 26% increased vitality damage +26 weapon vitality damage +32 energy 30% increased lifesteal a cursed sword from the land of the midnight sun. rsv 241">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Sword</span>
+            <h3 class="item-name">Edge of Darkness</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">120-132</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">vitality damage</span>
+                <span class="stat-value">84-93</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">cold damage</span>
+                <span class="stat-value">36-40</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.4x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 31% increased Cold Damage</li><li>• 26% increased Vitality Damage</li><li>• +26 Weapon Vitality Damage</li><li>• +32 Energy</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">30% Increased Lifesteal</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> RSV 241
+                </div>
+              
+              <p class="flavor-text">"A cursed sword from the land of the midnight sun."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>50</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 778</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="arch of iris" data-type="bow" data-search-content="arch of iris bow total_damage 250-276 elemental_breakdown 50-55 cold, fire, lightning, poison, spirit attack_speed 1.25x 9% increased total damage 11% increased attack speed 27% increased poison damage 27% increased lightning damage 20% increased fire damage 20% increased cold damage +9% to all magical resistances 10% increased weapon projectile damage the string of this bow is a magical band of shifting colors. fit 323">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Bow</span>
+            <h3 class="item-name">Arch of Iris</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">250-276</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">elemental breakdown</span>
+                <span class="stat-value">50-55 Cold, Fire, Lightning, Poison, Spirit</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 9% increased Total Damage</li><li>• 11% increased Attack Speed</li><li>• 27% increased Poison Damage</li><li>• 27% increased Lightning Damage</li><li>• 20% increased Fire Damage</li><li>• 20% increased Cold Damage</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+9% to all Magical Resistances</li><li class="unique-effect">10% increased Weapon Projectile Damage</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> FIT 323
+                </div>
+              
+              <p class="flavor-text">"The string of this bow is a magical band of shifting colors."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>50</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>10 091</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="ceremonial plate" data-type="shield" data-search-content="ceremonial plate shield armor 257 strike_armor 129 pierce_armor 129 337 free barrier +140 pierce armor +169 strike armor summons have 10% increased all speed +30 energy +9 energy regeneration per second summons have +16% to all resistances summons have 23% increased health a large embossed bowl depicting mythical scenes of glaukos and the people of pyrgos. rsv 241">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Shield</span>
+            <h3 class="item-name">Ceremonial Plate</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">armor</span>
+                <span class="stat-value">257</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike armor</span>
+                <span class="stat-value">129</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce armor</span>
+                <span class="stat-value">129</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 337 Free Barrier</li><li>• +140 Pierce Armor</li><li>• +169 Strike Armor</li><li>• Summons have 10% increased All Speed</li><li>• +30 Energy</li><li>• +9 Energy Regeneration per second</li><li>• Summons have +16% to All Resistances</li><li>• Summons have 23% increased Health</li>
+                </ul>
+              </div>
+            
+
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> RSV 241
+                </div>
+              
+              <p class="flavor-text">"A large embossed bowl depicting mythical scenes of Glaukos and the people of Pyrgos."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>50</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 711</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="crab shield" data-type="shield" data-search-content="crab shield shield armor 257 strike_armor 129 pierce_armor 129 481 free barrier +127 pierce armor +215 strike armor 26% increased critical hit chance 26% increased ailment chance summons have 24% increased health activating barrier inflicts pierce damage to enemies around you a shield fashioned from a sturdy crab shell. mgt 251">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Shield</span>
+            <h3 class="item-name">Crab Shield</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">armor</span>
+                <span class="stat-value">257</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike armor</span>
+                <span class="stat-value">129</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce armor</span>
+                <span class="stat-value">129</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 481 Free Barrier</li><li>• +127 Pierce Armor</li><li>• +215 Strike Armor</li><li>• 26% increased Critical Hit chance</li><li>• 26% increased Ailment Chance</li><li>• Summons have 24% increased Health</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Activating Barrier inflicts Pierce Damage to enemies around you</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> MGT 251
+                </div>
+              
+              <p class="flavor-text">"A shield fashioned from a sturdy crab shell."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>50</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 881</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="crush-stick of the fallen god" data-type="2h club" data-search-content="crush-stick of the fallen god 2h club total_damage 250-276 strike_damage 250-276 attack_speed 1x 12% more damage to humans and demi-humans +40 weapon strike damage +70 weapon vitality damage +33 vigor 15% chance to stun for 1 second on hit a club made of junk, seemingly for a creature the size of a cyclops. mgt 251">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 2h Club</span>
+            <h3 class="item-name">Crush-Stick of the Fallen God</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">250-276</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">250-276</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 12% More Damage to Humans and Demi-Humans</li><li>• +40 Weapon Strike Damage</li><li>• +70 Weapon Vitality Damage</li><li>• +33 Vigor</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">15% Chance to Stun for 1 second on Hit</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> MGT 251
+                </div>
+              
+              <p class="flavor-text">"A club made of junk, seemingly for a creature the size of a cyclops."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>50</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>9 211</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="telekinos" data-type="staff" data-search-content="telekinos staff total_damage 147-163 strike_damage 147-163 attack_speed 1x 33% increased strike damage 39% increased ailment power 16% increased area ability damage when you have full overwhelm, generating more spends it on an explosion dealing strike damage in a 3m radius area around you. a staff that projects blunt force, useful to settle scholarly disagreements. res 224">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Staff</span>
+            <h3 class="item-name">Telekinos</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">147-163</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">147-163</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 33% increased Strike Damage</li><li>• 39% increased Ailment Power</li><li>• 16% increased Area Ability Damage</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">When you have full overwhelm, generating more spends it on an explosion dealing Strike Damage in a 3m Radius Area around you.</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> RES 224
+                </div>
+              
+              <p class="flavor-text">"A staff that projects blunt force, useful to settle scholarly disagreements."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>6 893</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="thyrsus" data-type="staff" data-search-content="thyrsus staff total_damage 147-163 poison_damage 147-163 attack_speed 1x 12% increased total damage 47% increased poison damage +200 energy barrier +9 energy regeneration per second 10% increased cast speed activating barrier inflicts pierce damage to enemies around you a vined staff, sacred to dionysos. kno 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Staff</span>
+            <h3 class="item-name">Thyrsus</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">147-163</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">poison damage</span>
+                <span class="stat-value">147-163</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 12% increased Total Damage</li><li>• 47% increased Poison Damage</li><li>• +200 Energy Barrier</li><li>• +9 Energy Regeneration per second</li><li>• 10% increased Cast Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Activating Barrier inflicts Pierce Damage to enemies around you</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> KNO 230
+                </div>
+              
+              <p class="flavor-text">"A vined staff, sacred to Dionysos."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>6 902</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="raging bull" data-type="2h axe" data-search-content="raging bull 2h axe total_damage 212-234 strike_damage 142-157 pierce_damage 70-77 attack_speed 1x 25% stun resistance +159 strike armor +37 weapon strike damage +14 health regeneration per second 12% increased movement speed 4% increased weapon attack damage per rage stack this massive axe that once hung above the entrance to the labyrinth in knossos. mig 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 2h Axe</span>
+            <h3 class="item-name">Raging Bull</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">212-234</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">142-157</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">70-77</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 25% Stun Resistance</li><li>• +159 Strike Armor</li><li>• +37 Weapon Strike Damage</li><li>• +14 Health Regeneration per Second</li><li>• 12% increased Movement Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">4% increased Weapon Attack Damage per Rage Stack</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> MIG 230
+                </div>
+              
+              <p class="flavor-text">"This massive axe that once hung above the entrance to the Labyrinth in Knossos."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>6 975</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="fotia" data-type="staff" data-search-content="fotia staff total_damage 147-163 fire_damage 147-163 attack_speed 1x +47 weapon fire damage 54% increased fire damage +53 energy 42% increased ailment chance 10% increased cast speed 10% increased damage to channel spells a staff infused with the very essence of fire. kno 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Staff</span>
+            <h3 class="item-name">Fotia</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">147-163</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">fire damage</span>
+                <span class="stat-value">147-163</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +47 Weapon Fire Damage</li><li>• 54% increased Fire Damage</li><li>• +53 Energy</li><li>• 42% increased Ailment Chance</li><li>• 10% increased Cast Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">10% increased Damage to Channel Spells</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> KNO 230
+                </div>
+              
+              <p class="flavor-text">"A staff infused with the very essence of fire."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>6 938</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="ram bow ii" data-type="bow" data-search-content="ram bow ii bow total_damage 147-163 pierce_damage 44-49 strike_damage 44-49 fire_damage 59-65 attack_speed 1.25x +10% bleeding and poison resistance 46% increased strike damage +28 might 37% increased ailment chance hitting an enemy with your primary attack has a 10% chance of causing an explosion dealing fire damage in a 3m area around your target. a bow that hits with unusually explosive force. mig 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Bow</span>
+            <h3 class="item-name">Ram Bow II</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">147-163</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">44-49</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">44-49</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">fire damage</span>
+                <span class="stat-value">59-65</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +10% Bleeding and Poison Resistance</li><li>• 46% increased Strike Damage</li><li>• +28 Might</li><li>• 37% increased Ailment Chance</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Hitting an enemy with your Primary Attack has a 10% chance of causing an explosion dealing Fire Damage in a 3m area around your target.</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> MIG 230
+                </div>
+              
+              <p class="flavor-text">"A bow that hits with unusually explosive force."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>6 839</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="storm strike" data-type="bow" data-search-content="storm strike bow total_damage 147-163 pierce_damage 44-49 lightning_damage 103-114 attack_speed 1.25x +67 weapon lightning damage 49% increased lightning damage +19 agility 25% increased cooldown rate 14% increased movement speed generating overload grants 50% increased critical hit chance for 2 seconds a weapon enchanted with the power of wind and lightning. agi 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Bow</span>
+            <h3 class="item-name">Storm Strike</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">147-163</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">44-49</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">lightning damage</span>
+                <span class="stat-value">103-114</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +67 Weapon Lightning Damage</li><li>• 49% increased Lightning Damage</li><li>• +19 Agility</li><li>• 25% increased Cooldown Rate</li><li>• 14% increased Movement Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Generating Overload grants 50% increased Critical Hit Chance for 2 seconds</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> AGI 230
+                </div>
+              
+              <p class="flavor-text">"A weapon enchanted with the power of wind and lightning."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>7 078</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="moon disc" data-type="shield" data-search-content="moon disc shield armor 220 strike_resistance 110 pierce_resistance 110 shield: +438 free barrier 14% increased energy +216 energy barrier +10 energy regeneration per second 10% increased cast speed 16% increased movement speed 20% increased cooldown rate to area spells a mystical shield bearing the symbols of hekate. res 224">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Shield</span>
+            <h3 class="item-name">Moon Disc</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">armor</span>
+                <span class="stat-value">220</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike resistance</span>
+                <span class="stat-value">110</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce resistance</span>
+                <span class="stat-value">110</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• Shield: +438 Free Barrier</li><li>• 14% increased Energy</li><li>• +216 Energy Barrier</li><li>• +10 Energy Regeneration per second</li><li>• 10% increased Cast Speed</li><li>• 16% increased Movement Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">20% increased Cooldown Rate to Area Spells</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> RES 224
+                </div>
+              
+              <p class="flavor-text">"A mystical shield bearing the symbols of Hekate."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 474</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="thornwall" data-type="shield" data-search-content="thornwall shield armor 220 strike_resistance 110 pierce_resistance 110 shield: +307 free barrier +9% bleeding and poison resistance 12% less damage from beasts 19% increased retaliation damage +97 pierce retaliation sharp poisoned spikes dampen many a creature's appetite. ">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Shield</span>
+            <h3 class="item-name">Thornwall</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">armor</span>
+                <span class="stat-value">220</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike resistance</span>
+                <span class="stat-value">110</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce resistance</span>
+                <span class="stat-value">110</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• Shield: +307 Free Barrier</li><li>• +9% Bleeding and Poison Resistance</li><li>• 12% less Damage from Beasts</li><li>• 19% increased Retaliation Damage</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+97 Pierce Retaliation</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+              <p class="flavor-text">"Sharp poisoned spikes dampen many a creature's appetite."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 483</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="gryphon hunter shield" data-type="shield" data-search-content="gryphon hunter shield shield armor 220 strike_resistance 110 pierce_resistance 110 shield: +307 free barrier 10% more damage to elite creatures +7% bleeding and poison resistance 23% impairment resistance 17% stun resistance +14% glancing hits chance 13% more damage to enemy heroes and leaders the bigger the creature, the greater the glory. fit 298">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Shield</span>
+            <h3 class="item-name">Gryphon Hunter Shield</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">armor</span>
+                <span class="stat-value">220</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike resistance</span>
+                <span class="stat-value">110</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce resistance</span>
+                <span class="stat-value">110</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• Shield: +307 Free Barrier</li><li>• 10% More Damage to Elite Creatures</li><li>• +7% Bleeding and Poison Resistance</li><li>• 23% Impairment Resistance</li><li>• 17% Stun Resistance</li><li>• +14% Glancing Hits Chance</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">13% More Damage to enemy Heroes and Leaders</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> FIT 298
+                </div>
+              
+              <p class="flavor-text">"The bigger the creature, the greater the glory."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 545</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="bonesaw" data-type="sword" data-search-content="bonesaw sword total_damage 123-135 pierce_damage 74-81 strike_damage 49-54 attack_speed 1.25x +24 weapon pierce damage 19% increased critical hit chance 25% increased ailment duration +3% base weapon critical hit chance +19 vigor +23% base weapon ailment chance 20% increased critical hit chance against incapacitated enemies they say asklepios used this on his patients. it now serves a more gruesome purpose. mig 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Sword</span>
+            <h3 class="item-name">Bonesaw</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">123-135</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">74-81</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">49-54</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +24 Weapon Pierce Damage</li><li>• 19% increased Critical Hit chance</li><li>• 25% increased Ailment Duration</li><li>• +3% Base Weapon Critical Hit Chance</li><li>• +19 Vigor</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+23% Base Weapon Ailment Chance</li><li class="unique-effect">20% increased Critical Hit chance against Incapacitated Enemies</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> MIG 230
+                </div>
+              
+              <p class="flavor-text">"They say Asklepios used this on his patients. It now serves a more gruesome purpose."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 377</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="cuttlebone standard" data-type="spear" data-search-content="cuttlebone standard spear total_damage 123-135 pierce_damage 49-54 cold_damage 25-27 fire_damage 25-27 lightning_damage 25-27 attack_speed 1.25x 24% increased cold damage 23% increased fire damage 29% increased lightning damage 26% increased poison damage +10 energy regeneration per second generating overload grants 15% increased cast speed for 2 seconds a weird magical spear used in ichthian rituals. kno 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Spear</span>
+            <h3 class="item-name">Cuttlebone Standard</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">123-135</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">49-54</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">cold damage</span>
+                <span class="stat-value">25-27</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">fire damage</span>
+                <span class="stat-value">25-27</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">lightning damage</span>
+                <span class="stat-value">25-27</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 24% increased Cold Damage</li><li>• 23% increased Fire Damage</li><li>• 29% increased Lightning Damage</li><li>• 26% increased Poison Damage</li><li>• +10 Energy Regeneration per second</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Generating Overload grants 15% increased Cast Speed for 2 seconds</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> KNO 230
+                </div>
+              
+              <p class="flavor-text">"A weird magical spear used in ichthian rituals."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 324</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="soul carver" data-type="sword" data-search-content="soul carver sword total_damage 102-112 spirit_damage 51-56 pierce_damage 25-28 strike_damage 25-28 attack_speed 1.4x 27% increased spirit damage +23 weapon vitality damage +242 energy barrier 24% increased ailment chance consuming overwhelm creates an explosion dealing spirit damage in a 3m radius area around you. a shining blade that wounds the spirit as much as the body. cun 224">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Sword</span>
+            <h3 class="item-name">Soul Carver</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">102-112</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">spirit damage</span>
+                <span class="stat-value">51-56</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">25-28</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">25-28</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.4x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 27% increased Spirit Damage</li><li>• +23 Weapon Vitality Damage</li><li>• +242 Energy Barrier</li><li>• 24% increased Ailment Chance</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Consuming Overwhelm creates an explosion dealing Spirit Damage in a 3m Radius Area around you.</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> CUN 224
+                </div>
+              
+              <p class="flavor-text">"A shining blade that wounds the spirit as much as the body."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 518</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="shiverblood" data-type="spear" data-search-content="shiverblood spear total_damage 123-135 cold_damage 92-102 pierce_damage 31-34 attack_speed 1.25x 20% increased cold damage +11% glancing hits chance 21% increased ailment duration 25% increased ailment power every 10 seconds, hitting enemies with a weapon attack freezes them for 1s a masterpiece from the temple of kheimon, prime purveyor of cold-enchanted weapons and silent guardsmen. res 224">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Spear</span>
+            <h3 class="item-name">Shiverblood</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">123-135</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">cold damage</span>
+                <span class="stat-value">92-102</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">31-34</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 20% increased Cold Damage</li><li>• +11% Glancing Hits Chance</li><li>• 21% increased Ailment Duration</li><li>• 25% increased Ailment Power</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Every 10 seconds, hitting enemies with a Weapon Attack Freezes them for 1s</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> RES 224
+                </div>
+              
+              <p class="flavor-text">"A masterpiece from the Temple of Kheimon, prime purveyor of cold-enchanted weapons and silent guardsmen."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 454</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="venom heart" data-type="necklace" data-search-content="venom heart necklace 21% increased poison damage +24% poison resistance +46 weapon poison damage 30% increased ailment chance 25% increased ailment power 10% increased weapon projectile damage a cursed amulet that once held the image of a dear spouse. lv 45">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Necklace</span>
+            <h3 class="item-name">Venom Heart</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 21% increased Poison Damage</li><li>• +24% Poison Resistance</li><li>• +46 Weapon Poison Damage</li><li>• 30% increased Ailment Chance</li><li>• 25% increased Ailment Power</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">10% increased Weapon Projectile Damage</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> LV 45
+                </div>
+              
+              <p class="flavor-text">"A cursed amulet that once held the image of a dear spouse."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 406</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="wellspring" data-type="necklace" data-search-content="wellspring necklace +10 energy regeneration per second +50 health regeneration per second +6% to all magical resistances generating overload grants 20% increased health regeneration for 2 seconds wearing this amulet makes you feel refreshed and energized. lv 45">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Necklace</span>
+            <h3 class="item-name">Wellspring</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +10 Energy Regeneration per second</li><li>• +50 Health Regeneration per second</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+6% to all Magical Resistances</li><li class="unique-effect">Generating Overload grants 20% increased Health Regeneration for 2 seconds</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> LV 45
+                </div>
+              
+              <p class="flavor-text">"Wearing this amulet makes you feel refreshed and energized."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 583</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="moonclaw" data-type="necklace" data-search-content="moonclaw necklace 27% increased pierce damage 27% increased critical hit chance +11% glancing hits chance on dealing a critical hit, recover 30 energy. 3 seconds cooldown a charm fashioned from an owl's talon. lv 45">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Necklace</span>
+            <h3 class="item-name">Moonclaw</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 27% increased Pierce Damage</li><li>• 27% increased Critical Hit chance</li><li>• +11% Glancing Hits Chance</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">On dealing a Critical Hit, recover 30 Energy. 3 seconds Cooldown</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> LV 45
+                </div>
+              
+              <p class="flavor-text">"A charm fashioned from an owl's talon."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 421</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="cartouche ring" data-type="ring" data-search-content="cartouche ring ring 21% increased cold damage 21% increased fire damage 30% increased lightning damage +25 energy +10 energy regeneration per second +3 maximum burning stacks +3 maximum chilled stacks +3 maximum shocked stacks a fine gold ring with a multitude of small colorful stones. lv 35">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Ring</span>
+            <h3 class="item-name">Cartouche Ring</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 21% increased Cold Damage</li><li>• 21% increased Fire Damage</li><li>• 30% increased Lightning Damage</li><li>• +25 Energy</li><li>• +10 Energy Regeneration per second</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+3 Maximum Burning Stacks</li><li class="unique-effect">+3 Maximum Chilled Stacks</li><li class="unique-effect">+3 Maximum Shocked Stacks</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> LV 35
+                </div>
+              
+              <p class="flavor-text">"A fine gold ring with a multitude of small colorful stones."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 564</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="cratus' coil" data-type="ring" data-search-content="cratus' coil ring +215 health +16 might 14% increased physical damage 15% increased fire damage 15% increased cold damage +9% to all magical resistances +3 maximum rage stacks touched by strength itself, the plain looking metal emenates an aura of might and fury. lv 35">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Ring</span>
+            <h3 class="item-name">Cratus' Coil</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +215 Health</li><li>• +16 Might</li><li>• 14% increased Physical Damage</li><li>• 15% increased Fire Damage</li><li>• 15% increased Cold Damage</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+9% to all Magical Resistances</li><li class="unique-effect">+3 maximum Rage stacks</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> LV 35
+                </div>
+              
+              <p class="flavor-text">"Touched by Strength itself, the plain looking metal emenates an aura of might and fury."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 551</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="captain's signet" data-type="ring" data-search-content="captain's signet ring +154 pierce armor +165 strike armor +192 free barrier +9% to all magical resistances 15% increased damage to weapon attacks the iron seal of a veteran commander lv 35">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Ring</span>
+            <h3 class="item-name">Captain's Signet</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +154 Pierce Armor</li><li>• +165 Strike Armor</li><li>• +192 Free Barrier</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+9% to all Magical Resistances</li><li class="unique-effect">15% increased Damage to Weapon Attacks</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> LV 35
+                </div>
+              
+              <p class="flavor-text">"The iron seal of a veteran commander"</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 683</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="brigand's axe" data-type="1h axe" data-search-content="brigand's axe 1h axe total_damage 123-135 pierce_damage 12-14 strike_damage 49-54 poison_damage 61-68 attack_speed 1.25x 32% increased poison damage 33% increased strike damage +25% poison resistance 28% increased dodge range hitting an enemy with your primary attack reduces dodge cooldown by 10% of its remaining duration a well-honed blade coated in poison. agi 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 1h Axe</span>
+            <h3 class="item-name">Brigand's Axe</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">123-135</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">12-14</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">49-54</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">poison damage</span>
+                <span class="stat-value">61-68</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 32% increased Poison Damage</li><li>• 33% increased Strike Damage</li><li>• +25% Poison Resistance</li><li>• 28% increased Dodge Range</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Hitting an enemy with your Primary Attack reduces Dodge Cooldown by 10% of its remaining duration</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> AGI 230
+                </div>
+              
+              <p class="flavor-text">"A well-honed blade coated in poison."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 535</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="frostbite" data-type="1h axe" data-search-content="frostbite 1h axe total_damage 123-135 cold_damage 82-91 pierce_damage 40-45 attack_speed 1.25x 12% increased total damage 12% increased attack speed every 10 seconds, hitting enemies with a weapon attack freezes them for 1s 40% increased critical hit chance against frozen enemies an insidious weapon designed to freeze and shatter living beings. res 224">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 1h Axe</span>
+            <h3 class="item-name">Frostbite</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">123-135</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">cold damage</span>
+                <span class="stat-value">82-91</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">40-45</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 12% increased Total Damage</li><li>• 12% increased Attack Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Every 10 seconds, hitting enemies with a Weapon Attack Freezes them for 1s</li><li class="unique-effect">40% increased Critical Hit chance against Frozen Enemies</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> RES 224
+                </div>
+              
+              <p class="flavor-text">"An insidious weapon designed to freeze and shatter living beings."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 336</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="sagaris karkinos" data-type="1h axe" data-search-content="sagaris karkinos 1h axe total_damage 123-135 pierce_damage 86-95 strike_damage 37-41 attack_speed 1.25x +35 weapon cold damage +142 pierce armor +183 health 24% increased critical hit chance +3% base weapon critical hit chance +23% base weapon ailment chance +2 maximum bleeding stacks an axe fashioned from razor-sharp crab claws. mig 322">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 1h Axe</span>
+            <h3 class="item-name">Sagaris Karkinos</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">123-135</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">86-95</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">37-41</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +35 Weapon Cold Damage</li><li>• +142 Pierce Armor</li><li>• +183 Health</li><li>• 24% increased Critical Hit chance</li><li>• +3% Base Weapon Critical Hit Chance</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+23% Base Weapon Ailment Chance</li><li class="unique-effect">+2 Maximum Bleeding Stacks</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> MIG 322
+                </div>
+              
+              <p class="flavor-text">"An axe fashioned from razor-sharp crab claws."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 387</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="ratcatcher's stick" data-type="1h club" data-search-content="ratcatcher's stick 1h club total_damage 123-135 poison_damage 98-108 strike_damage 25-27 attack_speed 1.12x 33% increased poison damage +19% poison resistance 11% increased attack speed hitting an enemy with your primary attack has a 15% chance of causing an explosion in a 3m area, dealing poison damage with a 30% ailment chance. 44% more damage to vermin (spiders, bats, etc.) when rats were breeding in the sewers, tegean citizens developed an unsettling mixture of volatile poisons. kno 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 1h Club</span>
+            <h3 class="item-name">Ratcatcher's Stick</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">123-135</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">poison damage</span>
+                <span class="stat-value">98-108</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">25-27</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.12x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 33% increased Poison Damage</li><li>• +19% Poison Resistance</li><li>• 11% increased Attack Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Hitting an enemy with your Primary Attack has a 15% chance of causing an explosion in a 3m area, dealing Poison Damage with a 30% Ailment Chance.</li><li class="unique-effect">44% more Damage to vermin (Spiders, Bats, etc.)</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> KNO 230
+                </div>
+              
+              <p class="flavor-text">"When rats were breeding in the sewers, Tegean citizens developed an unsettling mixture of volatile poisons."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 365</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="barrage" data-type="bow" data-search-content="barrage bow total_damage 102-112 pierce_damage 102-112 attack_speed 1.56x 39% increased pierce damage +21% glancing hits chance 11% increased attack speed 12% increased movement speed 19% increased movement skill cooldown rate hitting an enemy with your primary attack has a 5% chance of casting an unmodified rain of arrows sometimes quantity is the answer after all. fit 298">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Bow</span>
+            <h3 class="item-name">Barrage</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">102-112</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">102-112</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.56x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 39% increased Pierce Damage</li><li>• +21% Glancing Hits Chance</li><li>• 11% increased Attack Speed</li><li>• 12% increased Movement Speed</li><li>• 19% increased Movement Skill Cooldown Rate</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Hitting an enemy with your Primary Attack has a 5% chance of casting an unmodified Rain of Arrows</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> FIT 298
+                </div>
+              
+              <p class="flavor-text">"Sometimes quantity is the answer after all."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>6 784</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="coral mace" data-type="1h club" data-search-content="coral mace 1h club total_damage 147-163 strike_damage 59-65 pierce_damage 44-49 cold_damage 44-49 attack_speed 1.12x +41 weapon cold damage +27 weapon pierce damage +23% base weapon ailment chance 10% more damage to cold spells this coral is hard enough to shatter bone. mig 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 1h Club</span>
+            <h3 class="item-name">Coral Mace</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">147-163</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">59-65</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">44-49</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">cold damage</span>
+                <span class="stat-value">44-49</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.12x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +41 Weapon Cold Damage</li><li>• +27 Weapon Pierce Damage</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+23% Base Weapon Ailment Chance</li><li class="unique-effect">10% more Damage to Cold Spells</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> MIG 230
+                </div>
+              
+              <p class="flavor-text">"This coral is hard enough to shatter bone."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 470</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="trygon's tail" data-type="dagger" data-search-content="trygon's tail dagger total_damage 123-135 cold_damage 61-68 poison_damage 61-68 attack_speed 1.4x +25 weapon cold damage 25% increased cold damage 22% increased poison damage your primary attack has an additional 100% chance to apply plagued when hitting frozen enemies the venomous tip of the lord of stingrays' tail, which slew the hero odysseus. fit 224">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Dagger</span>
+            <h3 class="item-name">Trygon's Tail</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">123-135</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">cold damage</span>
+                <span class="stat-value">61-68</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">poison damage</span>
+                <span class="stat-value">61-68</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.4x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +25 Weapon Cold Damage</li><li>• 25% increased Cold Damage</li><li>• 22% increased Poison Damage</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Your Primary Attack has an Additional 100% Chance to apply Plagued when hitting Frozen Enemies</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> FIT 224
+                </div>
+              
+              <p class="flavor-text">"The venomous tip of the lord of stingrays' tail, which slew the hero Odysseus."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 505</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="katharsis" data-type="dagger" data-search-content="katharsis dagger total_damage 102-112 lightning_damage 51-56 pierce_damage 51-56 attack_speed 1.56x +35 weapon lightning damage 10% increased energy 30% increased lightning damage 10% increased attack speed 11% increased cast speed when you have full overwhelm, generating more spends it on an explosion dealing lightning damage in a 3m radius area around you. a unique weapon, tempered by zeus's thunderbolt. it crackles with energy. agi 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Dagger</span>
+            <h3 class="item-name">Katharsis</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">102-112</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">lightning damage</span>
+                <span class="stat-value">51-56</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">51-56</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.56x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +35 Weapon Lightning Damage</li><li>• 10% increased Energy</li><li>• 30% increased Lightning Damage</li><li>• 10% increased Attack Speed</li><li>• 11% increased Cast Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">When you have full overwhelm, generating more spends it on an explosion dealing Lightning Damage in a 3m Radius Area around you.</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> AGI 230
+                </div>
+              
+              <p class="flavor-text">"A unique weapon, tempered by Zeus's thunderbolt. It crackles with energy."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 415</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="fell blade" data-type="dagger" data-search-content="fell blade dagger total_damage 102-112 pierce_damage 51-56 fire_damage 51-56 attack_speed 1.56x +46 weapon fire damage +26% fire resistance 19% increased pierce damage 10% increased attack speed an sinister weapon premanently burning with unholy fire. kno 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Dagger</span>
+            <h3 class="item-name">Fell Blade</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">102-112</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">51-56</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">fire damage</span>
+                <span class="stat-value">51-56</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.56x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +46 Weapon Fire Damage</li><li>• +26% Fire Resistance</li><li>• 19% increased Pierce Damage</li><li>• 10% increased Attack Speed</li>
+                </ul>
+              </div>
+            
+
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> KNO 230
+                </div>
+              
+              <p class="flavor-text">"An sinister weapon premanently burning with unholy fire."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 351</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="aegis of laconia" data-type="shield" data-search-content="aegis of laconia shield armor 220 strike_resistance 110 pierce_resistance 110 shield: +438 free barrier +198 health +13 might 11% increased movement skill cooldown rate 10% more damage to melee abilities the iconic shield of spartan warrior, rarely found without its owner. fit 224">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Shield</span>
+            <h3 class="item-name">Aegis of Laconia</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">armor</span>
+                <span class="stat-value">220</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike resistance</span>
+                <span class="stat-value">110</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce resistance</span>
+                <span class="stat-value">110</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• Shield: +438 Free Barrier</li><li>• +198 Health</li><li>• +13 Might</li><li>• 11% increased Movement Skill Cooldown Rate</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">10% more Damage to Melee abilities</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> FIT 224
+                </div>
+              
+              <p class="flavor-text">"The iconic shield of Spartan warrior, rarely found without its owner."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 388</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="silence" data-type="sword" data-search-content="silence sword total_damage 58-64 spirit_damage 29-32 lightning_damage 29-32 attack_speed 1.4x +18 weapon lightning damage 17% increased lightning damage 18% increased spirit damage +21 energy 13% increased cooldown rate +6% to all magical resistances 10% chance to silence enemies on hit created by a king to break a nymph's spell, this sword sparks fear in the hearts of magic-users. kno 123">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Sword</span>
+            <h3 class="item-name">Silence</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">58-64</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">spirit damage</span>
+                <span class="stat-value">29-32</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">lightning damage</span>
+                <span class="stat-value">29-32</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.4x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +18 Weapon Lightning Damage</li><li>• 17% increased Lightning Damage</li><li>• 18% increased Spirit Damage</li><li>• +21 Energy</li><li>• 13% increased Cooldown Rate</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+6% to all Magical Resistances</li><li class="unique-effect">10% chance to Silence enemies on Hit</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> KNO 123
+                </div>
+              
+              <p class="flavor-text">"Created by a king to break a nymph's spell, this sword sparks fear in the hearts of magic-users."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>29</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>1 088</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="shadowsting" data-type="spear" data-search-content="shadowsting spear total_damage 123-135 pierce_damage 61-68 leech_damage 61-68 attack_speed 1.25x 11% more damage to undead 5% increased health +44 weapon vitality damage 23% increased ailment chance consuming overwhelm creates an explosion dealing spirit damage in a 3m radius area around you. 20% increased damage against shadow creatures a dark aura surrounds this old dory. cun 224">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Spear</span>
+            <h3 class="item-name">Shadowsting</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">123-135</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">61-68</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">leech damage</span>
+                <span class="stat-value">61-68</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 11% More Damage to Undead</li><li>• 5% increased Health</li><li>• +44 Weapon Vitality Damage</li><li>• 23% increased Ailment Chance</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Consuming Overwhelm creates an explosion dealing Spirit Damage in a 3m Radius Area around you.</li><li class="unique-effect">20% increased Damage against Shadow Creatures</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> CUN 224
+                </div>
+              
+              <p class="flavor-text">"A dark aura surrounds this old dory."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 486</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="fungus log" data-type="2h club" data-search-content="fungus log 2h club total_damage 107-119 strike_damage 54-59 poison_damage 54-59 attack_speed 1x 26% increased poison damage 26% increased strike damage +29% poison resistance +103 health 40% increased ailment chance 39% increased ailment duration +3 maximum plagued stacks emits a cloud of spores when shaken. fit 160">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 2h Club</span>
+            <h3 class="item-name">Fungus Log</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">107-119</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">54-59</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">poison damage</span>
+                <span class="stat-value">54-59</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 26% increased Poison Damage</li><li>• 26% increased Strike Damage</li><li>• +29% Poison Resistance</li><li>• +103 Health</li><li>• 40% increased Ailment Chance</li><li>• 39% increased Ailment Duration</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+3 Maximum Plagued Stacks</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> FIT 160
+                </div>
+              
+              <p class="flavor-text">"Emits a cloud of spores when shaken."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>26</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>1 903</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="huntsman's barb" data-type="spear" data-search-content="huntsman's barb spear total_damage 123-135 pierce_damage 123-135 attack_speed 1.25x 22% increased pierce damage 40% increased ailment chance 18% increased ailment power 11% increased attack speed 30% more damage to boars, wolves and lions a spear that always strikes true, enchanted by artemis as a gift to orion. fit 224">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Spear</span>
+            <h3 class="item-name">Huntsman's Barb</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">123-135</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">123-135</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 22% increased Pierce Damage</li><li>• 40% increased Ailment Chance</li><li>• 18% increased Ailment Power</li><li>• 11% increased Attack Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">30% More Damage to Boars, Wolves and Lions</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> FIT 224
+                </div>
+              
+              <p class="flavor-text">"A spear that always strikes true, enchanted by Artemis as a gift to Orion."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>3 250</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="megalos" data-type="2h axe" data-search-content="megalos 2h axe total_damage 72-80 pierce_damage 11-12 strike_damage 43-48 lightning_damage 18-20 attack_speed 1.12x 10% increased total damage +23 weapon lightning damage +29% lightning resistance +127 health 14% increased movement speed when you have full overwhelm, generating more spends it on an explosion dealing lightning damage in a 3m radius area around you. a large axe once gifted by zeus to the king of thracia. fit 177">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 2h Axe</span>
+            <h3 class="item-name">Megalos</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">72-80</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">11-12</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">43-48</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">lightning damage</span>
+                <span class="stat-value">18-20</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.12x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 10% increased Total Damage</li><li>• +23 Weapon Lightning Damage</li><li>• +29% Lightning Resistance</li><li>• +127 Health</li><li>• 14% increased Movement Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">When you have full overwhelm, generating more spends it on an explosion dealing Lightning Damage in a 3m Radius Area around you.</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> FIT 177
+                </div>
+              
+              <p class="flavor-text">"A large axe once gifted by Zeus to the king of Thracia."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>21</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>1 258</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="key of elysium" data-type="2h axe" data-search-content="key of elysium 2h axe total_damage 208-230 spirit_damage 104-115 strike_damage 104-115 attack_speed 1.12x 15% more damage to undead 19% increased attributes +62 weapon strike damage summons have 10% increased all speed +24 agility +57 energy +236 health +23 knowledge +22 might 11% increased attack speed 11% increased movement speed legend says that the strength of great heroes past lingers in this mighty weapon. rsv 354">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 2h Axe</span>
+            <h3 class="item-name">Key of Elysium</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">208-230</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">spirit damage</span>
+                <span class="stat-value">104-115</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">104-115</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.12x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 15% More Damage to Undead</li><li>• 19% increased Attributes</li><li>• +62 Weapon Strike Damage</li><li>• Summons have 10% increased All Speed</li><li>• +24 Agility</li><li>• +57 Energy</li><li>• +236 Health</li><li>• +23 Knowledge</li><li>• +22 Might</li><li>• 11% increased Attack Speed</li><li>• 11% increased Movement Speed</li>
+                </ul>
+              </div>
+            
+
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> RSV 354
+                </div>
+              
+              <p class="flavor-text">"Legend says that the strength of great heroes past lingers in this mighty weapon."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>50</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>9 617</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="nessus' rage" data-type="sword" data-search-content="nessus' rage sword total_damage 120-132 pierce_damage 90-99 strike_damage 30-33 attack_speed 1.4x +25 weapon strike damage +16 might 10% increased attack speed 13% increased strike damage 13% increased pierce damage +2% added base lifesteal to physical damage 15% increased damage to weapon attacks the bloodthirst of the mighty centaur warrior still lingers in this khopesh. fit 241">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Sword</span>
+            <h3 class="item-name">Nessus' Rage</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">120-132</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">90-99</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">30-33</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.4x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +25 Weapon Strike Damage</li><li>• +16 Might</li><li>• 10% increased Attack Speed</li><li>• 13% increased Strike Damage</li><li>• 13% increased Pierce Damage</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+2% Added base Lifesteal to Physical Damage</li><li class="unique-effect">15% increased Damage to Weapon Attacks</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> FIT 241
+                </div>
+              
+              <p class="flavor-text">"The bloodthirst of the mighty centaur warrior still lingers in this Khopesh."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>50</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 785</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="oath breaker" data-type="dagger" data-search-content="oath breaker dagger total_damage 120-132 pierce_damage 120-132 attack_speed 1.56x +25 weapon strike damage 14% increased cooldown rate 14% increased strike damage 14% increased pierce damage 11% increased movement skill cooldown rate +2 maximum bleeding stacks 20% chance to trigger a rupture when hitting channeling enemies the blade was once shattered, to bury any memory of the dark role it played. fit 241">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Dagger</span>
+            <h3 class="item-name">Oath Breaker</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">120-132</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">120-132</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.56x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +25 Weapon Strike Damage</li><li>• 14% increased Cooldown Rate</li><li>• 14% increased Strike Damage</li><li>• 14% increased Pierce Damage</li><li>• 11% increased Movement Skill Cooldown Rate</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">+2 Maximum Bleeding Stacks</li><li class="unique-effect">20% Chance to Trigger a Rupture when hitting channeling Enemies</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> FIT 241
+                </div>
+              
+              <p class="flavor-text">"The blade was once shattered, to bury any memory of the dark role it played."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>50</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>5 068</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="onager" data-type="1h axe" data-search-content="onager 1h axe total_damage 144-160 strike_damage 97-107 pierce_damage 48-53 attack_speed 1.25x summons have 9% increased all speed +10 energy regeneration per second summons have 18% increased health hitting an enemy with your primary attack grants 15% increased movement speed for 1 second +62 health regeneration per second named after a tenacious donkey. knl 148">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 1h Axe</span>
+            <h3 class="item-name">Onager</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">144-160</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">97-107</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">48-53</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• Summons have 9% increased All Speed</li><li>• +10 Energy Regeneration per second</li><li>• Summons have 18% increased Health</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Hitting an enemy with your Primary Attack grants 15% increased Movement Speed for 1 second</li><li class="unique-effect">+62 Health Regeneration per second</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> KNL 148
+                </div>
+              
+              <p class="flavor-text">"Named after a tenacious donkey."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>50</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 949</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="spear of myrine" data-type="spear" data-search-content="spear of myrine spear total_damage 144-160 pierce_damage 97-107 poison_damage 48-53 attack_speed 1.25x 22% increased poison damage +37 weapon poison damage summons have 25% increased damage summons have 10% increased all speed 43% increased ailment chance 10% increased attack speed bleeding enemies are slowed by 20% the legendary amazon queen inspired her followers by leading from the front. agi 251">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Spear</span>
+            <h3 class="item-name">Spear of Myrine</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">144-160</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">97-107</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">poison damage</span>
+                <span class="stat-value">48-53</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 22% increased Poison Damage</li><li>• +37 Weapon Poison Damage</li><li>• Summons have 25% increased Damage</li><li>• Summons have 10% increased All Speed</li><li>• 43% increased Ailment Chance</li><li>• 10% increased Attack Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Bleeding Enemies are slowed by 20%</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> AGI 251
+                </div>
+              
+              <p class="flavor-text">"The legendary Amazon queen inspired her followers by leading from the front."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>50</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 630</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="thorny maul" data-type="1h club" data-search-content="thorny maul 1h club total_damage 173-191 pierce_damage 116-128 strike_damage 57-63 attack_speed 1.12x 33% increased pierce damage +27 weapon pierce damage +139 strike armor 19% increased critical hit chance +2% base weapon critical hit chance 121 pierce retaliation block crush and impale, all with one handy tool. fit 241">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 1h Club</span>
+            <h3 class="item-name">Thorny Maul</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">173-191</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">116-128</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">57-63</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.12x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 33% increased Pierce Damage</li><li>• +27 Weapon Pierce Damage</li><li>• +139 Strike Armor</li><li>• 19% increased Critical Hit chance</li><li>• +2% Base Weapon Critical Hit Chance</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">121 Pierce Retaliation</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> FIT 241
+                </div>
+              
+              <p class="flavor-text">"Block crush and impale, all with one handy tool."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>50</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>4 732</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="grace of eos" data-type="staff" data-search-content="grace of eos staff total_damage 173-191 spirit_damage 88-97 cold_damage 85-94 attack_speed 1x 33% increased cold damage 36% increased spirit damage +11 energy regeneration per second +213 free barrier 8% increased attack and cast speed -21 energy reserved 11% increased movement speed 13% more damage to enemy heroes and bosses holding this staff fills you with the vim of a new day. knl 251">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Staff</span>
+            <h3 class="item-name">Grace of Eos</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">173-191</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">spirit damage</span>
+                <span class="stat-value">88-97</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">cold damage</span>
+                <span class="stat-value">85-94</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 33% increased Cold Damage</li><li>• 36% increased Spirit Damage</li><li>• +11 Energy Regeneration per second</li><li>• +213 Free Barrier</li><li>• 8% increased Attack and Cast Speed</li><li>• -21 Energy Reserved</li><li>• 11% increased Movement Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">13% More Damage to enemy Heroes and Bosses</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> KNL 251
+                </div>
+              
+              <p class="flavor-text">"Holding this staff fills you with the vim of a new day."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>50</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>9 715</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="harpe" data-type="2h axe" data-search-content="harpe 2h axe total_damage 147-163 fire_damage 88-98 strike_damage 44-49 pierce_damage 15-16 attack_speed 1.25x +70 weapon fire damage +47% fire resistance 41% increased fire damage +10 energy regeneration per second +24% glancing hits chance 10% increased attack speed hitting an enemy with your primary attack grants 15% increased movement speed for 1 second the flames of hephaistos's forge still burn in this weapon's blade. agi 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 2h Axe</span>
+            <h3 class="item-name">Harpe</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">147-163</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">fire damage</span>
+                <span class="stat-value">88-98</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">44-49</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">pierce damage</span>
+                <span class="stat-value">15-16</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1.25x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +70 Weapon Fire Damage</li><li>• +47% Fire Resistance</li><li>• 41% increased Fire Damage</li><li>• +10 Energy Regeneration per second</li><li>• +24% Glancing Hits Chance</li><li>• 10% increased Attack Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">Hitting an enemy with your Primary Attack grants 15% increased Movement Speed for 1 second</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> AGI 230
+                </div>
+              
+              <p class="flavor-text">"The flames of Hephaistos's forge still burn in this weapon's blade."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>6 933</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="dam breaker" data-type="2h club" data-search-content="dam breaker 2h club total_damage 233-257 strike_damage 233-257 attack_speed 0.91x 44% increased strike damage +257 health 50% increased ailment chance 42% increased ailment duration 39% increased ailment power 20% chance to trigger a rupture when hitting channeling enemies an extremely heavy sledgehammer. mig 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 2h Club</span>
+            <h3 class="item-name">Dam Breaker</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">233-257</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">233-257</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">0.91x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 44% increased Strike Damage</li><li>• +257 Health</li><li>• 50% increased Ailment Chance</li><li>• 42% increased Ailment Duration</li><li>• 39% increased Ailment Power</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">20% Chance to Trigger a Rupture when hitting channeling Enemies</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> MIG 230
+                </div>
+              
+              <p class="flavor-text">"An extremely heavy sledgehammer."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>6 550</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="perdix' sphere" data-type="2h club" data-search-content="perdix' sphere 2h club total_damage 212-234 lightning_damage 169-187 strike_damage 42-47 attack_speed 1x 20% increased energy 31% increased lightning damage +30% lightning resistance +207 energy barrier 29% increased ailment power while ingenuity ran in the family, perdix had a special interest in iron and magnetism. kno 230">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic 2h Club</span>
+            <h3 class="item-name">Perdix' Sphere</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">212-234</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">lightning damage</span>
+                <span class="stat-value">169-187</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">strike damage</span>
+                <span class="stat-value">42-47</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 20% increased Energy</li><li>• 31% increased Lightning Damage</li><li>• +30% Lightning Resistance</li><li>• +207 Energy Barrier</li><li>• 29% increased Ailment Power</li>
+                </ul>
+              </div>
+            
+
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> KNO 230
+                </div>
+              
+              <p class="flavor-text">"While ingenuity ran in the family, Perdix had a special interest in iron and magnetism."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>7 072</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="ilektrisimos" data-type="staff" data-search-content="ilektrisimos staff total_damage 147-163 lightning_damage 147-163 attack_speed 1x 50% increased lightning damage +29% lightning resistance 7% increased attack and cast speed 53% increased ailment chance 46% increased ailment duration crafting zeus' thunderbolt took many failed attempts, some more promising than others. cun 298">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Staff</span>
+            <h3 class="item-name">Ilektrisimos</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+              <div class="stat-row">
+                <span class="stat-key">total damage</span>
+                <span class="stat-value">147-163</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">lightning damage</span>
+                <span class="stat-value">147-163</span>
+              </div>
+            
+              <div class="stat-row">
+                <span class="stat-key">attack speed</span>
+                <span class="stat-value">1x</span>
+              </div>
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• 50% increased Lightning Damage</li><li>• +29% Lightning Resistance</li><li>• 7% increased Attack and Cast Speed</li><li>• 53% increased Ailment Chance</li><li>• 46% increased Ailment Duration</li>
+                </ul>
+              </div>
+            
+
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> CUN 298
+                </div>
+              
+              <p class="flavor-text">"Crafting Zeus' thunderbolt took many failed attempts, some more promising than others."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>45</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>6 581</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="item-card" data-name="mother crab's claw" data-type="necklace" data-search-content="mother crab's claw necklace +12% cold resistance 4% increased health +13% poison resistance +46 pierce armor 10% increased movement speed 10% increased damage against crabs crabs seem to sense that the bearer of this trophy is a threat. lv 14">
+        <div class="rarity-bar"></div>
+        <div class="item-content">
+          <div class="item-header">
+            <span class="rarity-label">Epic Necklace</span>
+            <h3 class="item-name">Mother Crab's Claw</h3>
+          </div>
+          
+          <div class="stats-grid">
+            
+          </div>
+
+          <div class="details-section">
+            
+              <div class="detail-group">
+                <h4>Magical Properties</h4>
+                <ul>
+                  <li>• +12% Cold Resistance</li><li>• 4% increased Health</li><li>• +13% Poison Resistance</li><li>• +46 Pierce Armor</li><li>• 10% increased Movement Speed</li>
+                </ul>
+              </div>
+            
+
+            
+              <div class="detail-group">
+                <h4 class="unique-title">Unique Effects</h4>
+                <ul>
+                  <li class="unique-effect">10% increased Damage against Crabs</li>
+                </ul>
+              </div>
+            
+
+            <div class="meta-section">
+              
+                <div class="requirement">
+                  <strong>Requirements:</strong> LV 14
+                </div>
+              
+              <p class="flavor-text">"Crabs seem to sense that the bearer of this trophy is a threat."</p>
+            </div>
+          </div>
+
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>Required Level</span>
+              <strong>14</strong>
+            </div>
+            <div class="footer-stat">
+              <span>Gold Value</span>
+              <strong>535</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const typeFilters = document.getElementById('typeFilters');
+        const itemGrid = document.getElementById('itemGrid');
+        const resultsInfo = document.getElementById('resultsInfo');
+        const itemCards = Array.from(document.querySelectorAll('.item-card'));
+        
+        let activeType = 'all';
+        let searchTerm = '';
+
+        function updateFilters() {
+            let visibleCount = 0;
+            
+            itemCards.forEach(card => {
+                const type = card.getAttribute('data-type');
+                const searchContent = card.getAttribute('data-search-content');
+                
+                const matchesType = activeType === 'all' || type === activeType;
+                const matchesSearch = !searchTerm || searchContent.includes(searchTerm);
+                
+                if (matchesType && matchesSearch) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+            
+            resultsInfo.textContent = `Showing ${visibleCount} item${visibleCount === 1 ? '' : 's'}`;
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            searchTerm = e.target.value.toLowerCase();
+            updateFilters();
+        });
+
+        typeFilters.addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                activeType = e.target.getAttribute('data-type');
+                updateFilters();
+            }
+        });
+
+        // Initial count
+        updateFilters();
+    </script>
+</body>
+</html>
+    
