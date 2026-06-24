@@ -1,0 +1,1039 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titan Quest 2 Database</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #09090b;
+            --surface: #18181b;
+            --border: #27272a;
+            --text-primary: #fafafa;
+            --text-muted: #a1a1aa;
+            --rarity-epic: #a855f7;
+            --rarity-rare: #3b82f6;
+            --accent-gold: #fbbf24;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background-color: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding: 16px 0;
+            transition: all 0.3s ease;
+        }
+
+        header.view-relics-active {
+            border-bottom-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h1 span {
+            color: var(--rarity-epic);
+        }
+
+        header.view-relics-active h1 span {
+            color: #10b981;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            background: var(--surface);
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-btn.active {
+            background: var(--border);
+            color: var(--text-primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: 500px;
+            opacity: 1;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        header.scrolled:not(:hover) .controls {
+            max-height: 0;
+            opacity: 0;
+            margin: 0;
+            gap: 0;
+        }
+
+        header.scrolled:not(:hover) .header-top {
+            margin-bottom: 0;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .search-box input:focus {
+            border-color: var(--rarity-epic);
+        }
+
+        header.view-relics-active .search-box input:focus {
+            border-color: #10b981;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--text-muted);
+            color: var(--text-primary);
+        }
+
+        .filter-btn.active {
+            background: var(--text-primary);
+            color: var(--bg);
+            border-color: var(--text-primary);
+        }
+
+        .results-info {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            padding: 40px 0;
+        }
+
+        .item-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .item-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        }
+
+        .item-card.hidden {
+            display: none;
+        }
+
+        .rarity-bar {
+            height: 4px;
+            background-color: var(--rarity-epic);
+        }
+
+        .item-content {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .item-header {
+            margin-bottom: 24px;
+        }
+
+        .rarity-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--rarity-epic);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .item-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+            background: rgba(0,0,0,0.2);
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .stat-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-key {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .details-section {
+            border-top: 1px solid var(--border);
+            padding-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            flex: 1;
+        }
+
+        .detail-group h4 {
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin: 0 0 8px 0;
+        }
+
+        .detail-group ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .detail-group li {
+            font-size: 12px;
+            color: var(--rarity-rare);
+            margin-bottom: 4px;
+        }
+
+        .unique-title {
+            color: var(--accent-gold) !important;
+        }
+
+        .unique-effect {
+            color: var(--accent-gold) !important;
+            font-style: italic;
+        }
+
+        .meta-section {
+            margin-top: auto;
+        }
+
+        .requirement {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 10px;
+            margin-bottom: 16px;
+        }
+
+        .requirement strong {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .flavor-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 12px;
+            font-style: italic;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .footer-stats {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .footer-stat span {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .footer-stat strong {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .grid { grid-template-columns: 1fr; }
+            .controls { gap: 10px; }
+        }
+
+        .hover-indicator {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            padding: 4px 16px;
+            color: var(--text-muted);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        header.scrolled:not(:hover) .hover-indicator {
+            opacity: 1;
+            visibility: visible;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(4px); }
+            60% { transform: translateX(-50%) translateY(2px); }
+        }
+
+        .loading-container {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 64px 20px;
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border-top-color: var(--rarity-epic);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .error-message {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 16px 24px;
+            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .item-header-wrapper {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .item-header-wrapper .item-header {
+            margin-bottom: 0;
+        }
+        .item-icon-frame {
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1.5px solid var(--border);
+            transition: all 0.2s ease-in-out;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+        }
+        .item-icon-frame.epic {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px rgba(251, 191, 36, 0.12), inset 0 0 8px rgba(0, 0, 0, 0.6);
+            color: var(--accent-gold);
+        }
+        .item-icon-frame.relic {
+            border-color: #f59e0b;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.12), inset 0 0 8px rgba(0, 0, 0, 0.6);
+            color: #f59e0b;
+        }
+        .item-icon-frame.charm {
+            border-color: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.12), inset 0 0 8px rgba(0, 0, 0, 0.6);
+            color: #10b981;
+        }
+        .item-card:hover .item-icon-frame {
+            transform: scale(1.06);
+        }
+        .item-card:hover .item-icon-frame.epic {
+            box-shadow: 0 0 16px rgba(251, 191, 36, 0.25), inset 0 0 8px rgba(0, 0, 0, 0.6);
+        }
+        .item-card:hover .item-icon-frame.relic {
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.25), inset 0 0 8px rgba(0, 0, 0, 0.6);
+        }
+        .item-card:hover .item-icon-frame.charm {
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.25), inset 0 0 8px rgba(0, 0, 0, 0.6);
+        }
+        .item-icon {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+        .item-icon-frame.epic img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 6px;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+        .item-icon-frame svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .main-footer {
+            background-color: rgba(9, 9, 11, 0.4);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            padding: 24px 0;
+            margin-top: 48px;
+            transition: border-color 0.3s ease;
+        }
+
+        .main-footer.view-relics-active {
+            border-top-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .footer-right a {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .footer-right a:hover {
+            transform: translateY(-1px);
+        }
+
+        .main-footer.view-relics-active .footer-right a:hover {
+            color: #10b981;
+        }
+
+        .main-footer:not(.view-relics-active) .footer-right a:hover {
+            color: var(--rarity-epic);
+        }
+
+        .footer-right a svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .footer-container {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header id="mainHeader">
+        <div class="container" style="padding: 0;">
+            <div class="header-top">
+                <h1>Titan Quest 2 <span>Database</span></h1>
+                <div class="nav-tabs">
+                    <button class="nav-btn active" data-view="items">Epic Items</button>
+                    <button class="nav-btn" data-view="relics">Relics & Charms</button>
+                </div>
+            </div>
+            <div class="controls">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search database...">
+                </div>
+                <div class="filters" id="typeFilters">
+                    <!-- Filters will be injected here by JS -->
+                </div>
+                <div class="filters" id="slotFilters" style="margin-top: 8px; display: none;">
+                    <!-- Filter for slots will be injected here by JS -->
+                </div>
+                <div class="results-info" id="resultsInfo">
+                    Loading database...
+                </div>
+            </div>
+        </div>
+        <div class="hover-indicator">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+    </header>
+    <div class="container">
+        <div class="grid" id="itemGrid">
+            <div class="loading-container" id="loadingState">
+                <div class="spinner"></div>
+                <p>Fetching latest database from GitHub...</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="main-footer" id="mainFooter">
+        <div class="container footer-container">
+            <div class="footer-left">
+                Titan Quest 2 Database &copy; 2026. Data extracted from game files.
+            </div>
+            <div class="footer-right">
+                <a href="https://github.com/RoiMitha971/TQ2_DB_UniquesCharmsRelics" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="lucide-github-icon"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
+                    <span>Database Source</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const formatDroppedBy = (val) => {
+            if (!val) return val;
+            return val
+                .replace(/chapter 1/gi, 'Flooded Farmlands')
+                .replace(/chapter 2/gi, 'Northern Beaches')
+                .replace(/chapter 3/gi, 'Arcadian Plains');
+        };
+
+        const getRelicIconPath = (item) => {
+            const cat = item.category;
+            const name = item.item_name;
+            let slug = name.toLowerCase()
+                .replace(/'s/g, 's')
+                .replace(/[^a-z0-9]/g, '');
+
+            const mapping = {
+                'boarmanblood': 'boarblood',
+                'darkessence': 'cursedessence',
+                'fetidbile': 'leechbile',
+                'ragingtempest': 'primaltempest'
+            };
+            if (mapping[slug]) {
+                slug = mapping[slug];
+            }
+
+            const folder = cat === 'Charm' ? 'Charms' : 'Relics';
+            const prefix = cat.toLowerCase();
+            return `Relics_and_Charms/${folder}/t_icon_${prefix}_${slug}_complete_01.png`;
+        };
+
+        const getEpicItemIcon = (itemType) => {
+            const type = itemType.toLowerCase();
+            if (type.includes('sword') || type.includes('dagger')) return 'sword';
+            if (type.includes('shield')) return 'shield';
+            if (type.includes('bow')) return 'crosshair';
+            if (type.includes('ring')) return 'circle-dot';
+            if (type.includes('necklace')) return 'gem';
+            if (type.includes('talisman')) return 'sparkles';
+            if (type.includes('staff')) return 'wand';
+            if (type.includes('axe')) return 'axe';
+            if (type.includes('club')) return 'hammer';
+            if (type.includes('spear')) return 'swords';
+            return 'help-circle';
+        };
+
+        const getEpicItemIconPath = (item) => {
+            const name = item.item_name;
+            const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            
+            const images = {
+                "aegisoflaconia": "Epic_Items/aegisoflaconia.png",
+                "archofiris": "Epic_Items/archofiris.png",
+                "atlanteansabre": "Epic_Items/atlanteansabre.png",
+                "barrage": "Epic_Items/barrage.png",
+                "blademagossword": "Epic_Items/blademagossword.png",
+                "bloodgem": "Epic_Items/bloodgem.png",
+                "bonesaw": "Epic_Items/bonesaw.png",
+                "brigandsaxe": "Epic_Items/brigandsaxe.png",
+                "ceremonialplate": "Epic_Items/ceremonialplate.png",
+                "chaoscube": "Epic_Items/chaoscube.png",
+                "chromaticstaff": "Epic_Items/chromaticstaff.png",
+                "conchofstorms": "Epic_Items/conchofstorms.png",
+                "coralmace": "Epic_Items/coralmace.png",
+                "crabshield": "Epic_Items/crabshield.png",
+                "crimsonviper": "Epic_Items/crimsonviper.png",
+                "crushstickofthefallengod": "Epic_Items/crushstickofthefallengod.png",
+                "cuttlebonestandard": "Epic_Items/cuttlebonestandard.png",
+                "dambreaker": "Epic_Items/dambreaker.png",
+                "deathrattle": "Epic_Items/deathrattle.png",
+                "earthentalisman": "Epic_Items/earthentalisman.png",
+                "edgeofdarkness": "Epic_Items/edgeofdarkness.png",
+                "fellblade": "Epic_Items/fellblade.png",
+                "fotia": "Epic_Items/fotia.png",
+                "frostbite": "Epic_Items/frostbite.png",
+                "funguslog": "Epic_Items/funguslog.png",
+                "graceofeos": "Epic_Items/graceofeos.png",
+                "gryphonhuntershield": "Epic_Items/gryphonhuntershield.png",
+                "harpe": "Epic_Items/harpe.png",
+                "hippokamposscapula": "Epic_Items/hippokamposscapula.png",
+                "huntsmansbarb": "Epic_Items/huntsmansbarb.png",
+                "icefirespike": "Epic_Items/icefirespike.png",
+                "ilektrisimos": "Epic_Items/ilektrisimos.png",
+                "katharsis": "Epic_Items/katharsis.png",
+                "keyofelysium": "Epic_Items/keyofelysium.png",
+                "lycurguswisdom": "Epic_Items/lycurguswisdom.png",
+                "mamertinesap": "Epic_Items/mamertinesap.png",
+                "megalos": "Epic_Items/megalos.png",
+                "moondisc": "Epic_Items/moondisc.png",
+                "moonclaw": "Epic_Items/moonclaw.png",
+                "nessusrage": "Epic_Items/nessusrage.png",
+                "oathbreaker": "Epic_Items/oathbreaker.png",
+                "onager": "Epic_Items/onager.png",
+                "orionsmace": "Epic_Items/orionsmace.png",
+                "perdixsphere": "Epic_Items/perdixsphere.png",
+                "ragingbull": "Epic_Items/ragingbull.png",
+                "rambowii": "Epic_Items/rambowii.png",
+                "ratcatchersstick": "Epic_Items/ratcatchersstick.png",
+                "rimescythe": "Epic_Items/rimescythe.png",
+                "sagariskarkinos": "Epic_Items/sagariskarkinos.png",
+                "shadowsting": "Epic_Items/shadowsting.png",
+                "shiverblood": "Epic_Items/shiverblood.png",
+                "silence": "Epic_Items/silence.png",
+                "soulcarver": "Epic_Items/soulcarver.png",
+                "spearofmyrine": "Epic_Items/spearofmyrine.png",
+                "stormstrike": "Epic_Items/stormstrike.png",
+                "telekinos": "Epic_Items/telekinos.png",
+                "thornwall": "Epic_Items/thornwall.png",
+                "thornymaul": "Epic_Items/thornymaul.png",
+                "thyrsus": "Epic_Items/thyrsus.png",
+                "trygonstail": "Epic_Items/trygonstail.png",
+                "venomheart": "Epic_Items/venomheart.png",
+                "wellspring": "Epic_Items/wellspring.png"
+            };
+
+            return images[cleanName] || null;
+        };
+
+        const searchInput = document.getElementById('searchInput');
+        const typeFilters = document.getElementById('typeFilters');
+        const slotFilters = document.getElementById('slotFilters');
+        const itemGrid = document.getElementById('itemGrid');
+        const resultsInfo = document.getElementById('resultsInfo');
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const mainHeader = document.getElementById('mainHeader');
+        const mainFooter = document.getElementById('mainFooter');
+        const loadingState = document.getElementById('loadingState');
+        
+        let currentView = 'items';
+        let activeType = 'all';
+        let activeRelicSlot = 'all';
+        let searchTerm = '';
+        
+        let allItems = [];
+        let allRelics = [];
+        let itemTypes = [];
+        let relicTypes = ['Relic', 'Charm'];
+        let relicSlots = [];
+
+        async function init() {
+            try {
+                const timestamp = Date.now();
+                const [itemsRes, relicsRes] = await Promise.all([
+                    fetch(`https://raw.githubusercontent.com/RoiMitha971/TQ2_DB_UniquesCharmsRelics/main/items.ts?t=\${timestamp}`),
+                    fetch(`https://raw.githubusercontent.com/RoiMitha971/TQ2_DB_UniquesCharmsRelics/main/relics_charms.ts?t=\${timestamp}`)
+                ]);
+                
+                if (!itemsRes.ok || !relicsRes.ok) throw new Error('Failed to fetch');
+
+                const parseTsArray = (text) => {
+                    let cleanedText = text;
+                    // Fix Shade of Hector missing quote syntax error in remote relics_charms.ts
+                    cleanedText = cleanedText.replace(
+                        /"After you get hit, gain 10% increased Speed for 8s \(Non-Stackable\)(?!")/,
+                        '"After you get hit, gain 10% increased Speed for 8s (Non-Stackable)"'
+                    );
+
+                    const exportIndex = cleanedText.indexOf('export const');
+                    if (exportIndex === -1) return [];
+                    const equalsIndex = cleanedText.indexOf('=', exportIndex);
+                    if (equalsIndex === -1) return [];
+                    const startIndex = cleanedText.indexOf('[', equalsIndex);
+                    const endIndex = cleanedText.lastIndexOf(']');
+                    if (startIndex === -1 || endIndex === -1) return [];
+                    const arrayString = cleanedText.substring(startIndex, endIndex + 1);
+                    return new Function('return ' + arrayString)();
+                };
+
+                allItems = parseTsArray(await itemsRes.text());
+                allRelics = parseTsArray(await relicsRes.text());
+                
+                itemTypes = Array.from(new Set(allItems.map(i => i.item_type))).sort();
+                
+                const slotsSet = new Set();
+                allRelics.forEach(r => {
+                    if (r.enchantable_slots) {
+                        r.enchantable_slots.forEach(s => {
+                            s.split(',').forEach(splitS => slotsSet.add(splitS.trim()));
+                        });
+                    }
+                });
+                relicSlots = Array.from(slotsSet).sort();
+                
+                renderAll();
+                renderFilters();
+                updateDisplay();
+            } catch (err) {
+                console.error(err);
+                itemGrid.innerHTML = '<div class="loading-container"><div class="error-message">Failed to load data from GitHub. Please check your connection and try again.</div></div>';
+                resultsInfo.textContent = 'Error loading data';
+            }
+        }
+
+        function renderAll() {
+            const itemsHtml = allItems.map(i => {
+                const searchContent = [
+                    i.item_name, i.item_type,
+                    ...Object.entries(i.base_stats || {}).map(([k, v]) => k + ' ' + v),
+                    ...(i.magical_properties || []),
+                    ...(i.unique_effects || []),
+                    i.flavor_text || '',
+                    i.requirements || ''
+                ].join(' ').toLowerCase();
+                
+                const iconPath = getEpicItemIconPath(i);
+                const iconHtml = iconPath 
+                    ? `<img src="${iconPath}" alt="${i.item_name}">`
+                    : `<i data-lucide="${getEpicItemIcon(i.item_type)}"></i>`;
+                
+                return `
+                    <div class="item-card view-items" data-type="${i.item_type.toLowerCase()}" data-search-content="${searchContent.replace(/"/g, '&quot;')}">
+                        <div class="rarity-bar"></div>
+                        <div class="item-content">
+                            <div class="item-header-wrapper">
+                                <div class="item-icon-frame epic" title="${i.item_type}">
+                                    ${iconHtml}
+                                </div>
+                                <div class="item-header">
+                                    <span class="rarity-label">${i.rarity} ${i.item_type}</span>
+                                    <h3 class="item-name">${i.item_name}</h3>
+                                </div>
+                            </div>
+                            <div class="stats-grid">
+                                ${Object.entries(i.base_stats || {}).map(([key, value]) => `
+                                    <div class="stat-row">
+                                        <span class="stat-key">${key.replace(/_/g, ' ')}</span>
+                                        <span class="stat-value">${value}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="details-section">
+                                ${i.magical_properties && i.magical_properties.length > 0 ? `
+                                    <div class="detail-group">
+                                        <h4>Magical Properties</h4>
+                                        <ul>${i.magical_properties.map(p => `<li>• ${p}</li>`).join('')}</ul>
+                                    </div>
+                                ` : ''}
+                                ${i.unique_effects && i.unique_effects.length > 0 ? `
+                                    <div class="detail-group">
+                                        <h4 class="unique-title">Unique Effects</h4>
+                                        <ul>${i.unique_effects.map(e => `<li class="unique-effect">${e}</li>`).join('')}</ul>
+                                    </div>
+                                ` : ''}
+                                <div class="meta-section">
+                                    ${i.requirements ? `<div class="requirement"><strong>Requirements:</strong> ${i.requirements}</div>` : ''}
+                                    <p class="flavor-text">"${i.flavor_text}"</p>
+                                </div>
+                            </div>
+                            <div class="footer-stats">
+                                <div class="footer-stat"><span>Item Level</span><strong>${i.required_level}</strong></div>
+                                <div class="footer-stat"><span>Gold Value</span><strong>${i.gold_value ? i.gold_value.toLocaleString() : 0}</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const relicsHtml = allRelics.map(r => {
+                const searchContent = [
+                    r.item_name, r.item_type, r.category,
+                    ...(r.stats || []), ...(r.completion_bonus || []), ...(r.enchantable_slots || []),
+                    r.dropped_by || ''
+                ].join(' ').toLowerCase();
+
+                const iconPath = getRelicIconPath(r);
+                const classCat = r.category.toLowerCase();
+
+                return `
+                    <div class="item-card view-relics hidden" data-type="${r.category.toLowerCase()}" data-slots="${(r.enchantable_slots || []).join(',')}" data-search-content="${searchContent.replace(/"/g, '&quot;')}">
+                        <div class="rarity-bar" style="background-color: ${r.category === 'Relic' ? '#f59e0b' : '#10b981'}"></div>
+                        <div class="item-content">
+                            <div class="item-header-wrapper">
+                                <div class="item-icon-frame ${classCat}">
+                                    <img class="item-icon" src="${iconPath}" alt="${r.item_name}" onerror="this.src='Relics_and_Charms/Default_Icons/t_icon_${classCat}_default_complete_01.png';">
+                                </div>
+                                <div class="item-header">
+                                    <span class="rarity-label" style="color: ${r.category === 'Relic' ? '#f59e0b' : '#10b981'}">${r.category}</span>
+                                    <h3 class="item-name">${r.item_name}</h3>
+                                </div>
+                            </div>
+                            <div class="details-section" style="border-top: none; padding-top: 0;">
+                                ${r.stats && r.stats.length > 0 ? `
+                                <div class="detail-group">
+                                    <h4>Stats</h4>
+                                    <ul>${r.stats.map(s => `<li>• ${s}</li>`).join('')}</ul>
+                                </div>
+                                ` : ''}
+                                ${r.completion_bonus && r.completion_bonus.length > 0 ? `
+                                <div class="detail-group">
+                                    <h4 class="unique-title">Completion Bonus</h4>
+                                    <ul>${r.completion_bonus.map(b => `<li class="unique-effect">${b}</li>`).join('')}</ul>
+                                </div>
+                                ` : ''}
+                                <div class="meta-section">
+                                    ${r.enchantable_slots && r.enchantable_slots.length > 0 ? `<div class="requirement"><strong>Can Enchant:</strong> ${r.enchantable_slots.join(', ')}</div>` : ''}
+                                    ${(r.flavor_text || r.dropped_by) ? '<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 8px;">' + (r.flavor_text ? '<p class="flavor-text">&quot;' + r.flavor_text + '&quot;</p>' : '') + (r.dropped_by ? '<div><strong style="text-transform:uppercase; font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">' + (r.category === 'Charm' ? 'Dropped By' : 'Dropped In') + '</strong><br><span class="flavor-text">' + formatDroppedBy(r.dropped_by) + '</span></div>' : '') + '</div>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            itemGrid.innerHTML = itemsHtml + relicsHtml;
+
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        function renderFilters() {
+            const types = currentView === 'items' ? itemTypes : relicTypes;
+            const allLabel = currentView === 'items' ? 'All Types' : 'All Categories';
+            
+            let html = `<button class="filter-btn ${activeType === 'all' ? 'active' : ''}" data-type="all">${allLabel}</button>`;
+            
+            types.forEach(type => {
+                const typeLower = type.toLowerCase();
+                html += `<button class="filter-btn ${activeType === typeLower ? 'active' : ''}" data-type="${typeLower}">${type}</button>`;
+            });
+            
+            typeFilters.innerHTML = html;
+
+            if (currentView === 'relics' && relicSlots.length > 0) {
+                let slotHtml = `<button class="filter-btn ${activeRelicSlot === 'all' ? 'active' : ''}" data-slot="all">All Slots</button>`;
+                relicSlots.forEach(slot => {
+                    slotHtml += `<button class="filter-btn ${activeRelicSlot === slot ? 'active' : ''}" data-slot="${slot}">${slot}</button>`;
+                });
+                slotFilters.innerHTML = slotHtml;
+                slotFilters.style.display = 'flex';
+                slotFilters.style.flexWrap = 'wrap';
+            } else {
+                slotFilters.innerHTML = '';
+                slotFilters.style.display = 'none';
+            }
+        }
+
+        function updateDisplay() {
+            let visibleCount = 0;
+            const itemCards = Array.from(document.querySelectorAll('.item-card'));
+            
+            itemCards.forEach(card => {
+                const isItemView = card.classList.contains('view-items');
+                const isRelicView = card.classList.contains('view-relics');
+                
+                if ((currentView === 'items' && !isItemView) || (currentView === 'relics' && !isRelicView)) {
+                    card.classList.add('hidden');
+                    return;
+                }
+                
+                const type = card.getAttribute('data-type');
+                const searchContent = card.getAttribute('data-search-content');
+                const slotsStr = card.getAttribute('data-slots') || '';
+                const slotsArray = slotsStr ? slotsStr.split(',').flatMap(s => s.split(',').map(x => x.trim())) : [];
+                
+                const matchesType = activeType === 'all' || type === activeType;
+                const matchesSearch = !searchTerm || searchContent.includes(searchTerm);
+                let matchesSlot = true;
+                if (currentView === 'relics') {
+                    matchesSlot = activeRelicSlot === 'all' || slotsArray.some(s => s.split(',').map(x => x.trim()).includes(activeRelicSlot));
+                }
+                
+                if (matchesType && matchesSearch && matchesSlot) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+            
+            const viewLabel = currentView === 'items' ? 'item' : 'relic & charm';
+            resultsInfo.textContent = `Showing ${visibleCount} ${viewLabel}${visibleCount === 1 ? '' : 's'}`;
+        }
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                navBtns.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                currentView = e.target.getAttribute('data-view');
+                activeType = 'all';
+                activeRelicSlot = 'all';
+                
+                if (currentView === 'relics') {
+                    mainHeader.classList.add('view-relics-active');
+                    mainFooter.classList.add('view-relics-active');
+                } else {
+                    mainHeader.classList.remove('view-relics-active');
+                    mainFooter.classList.remove('view-relics-active');
+                }
+                
+                renderFilters();
+                updateDisplay();
+            });
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            searchTerm = e.target.value.toLowerCase();
+            updateDisplay();
+        });
+
+        typeFilters.addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                typeFilters.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                activeType = e.target.getAttribute('data-type');
+                updateDisplay();
+            }
+        });
+
+        slotFilters.addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                slotFilters.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                activeRelicSlot = e.target.getAttribute('data-slot');
+                updateDisplay();
+            }
+        });
+
+        // Scroll event for header collapse
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                mainHeader.classList.add('scrolled');
+            } else {
+                mainHeader.classList.remove('scrolled');
+            }
+        });
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
